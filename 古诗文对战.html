@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高中古诗对战</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        }
+        
+        .main-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .menu-title {
+            font-size: 3em;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .menu-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* 规则和弹窗 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .close-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .game-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            margin: 40px auto;
+            display: none; 
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        
+        .health-bar {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .player-health, .enemy-health {
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .player-health {
+            background: linear-gradient(to right, #2ecc71, #1abc9c);
+        }
+        
+        .enemy-health {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .question-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+        }
+        
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .option-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #ecf0f1;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .option-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        .option-btn:disabled {
+            background: #bdc3c7;
+            color: #7f8c8d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .enhancement-options {
+            display: none;
+            margin: 15px 0;
+        }
+        
+        .enhancement-btn {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .damage-enhance {
+            background: linear-gradient(to right, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        
+        .health-enhance {
+            background: linear-gradient(to right, #51cf66, #40c057);
+            color: white;
+        }
+        
+        .enhancement-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .player-turn {
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid #2ecc71;
+        }
+        
+        .enemy-turn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid #e74c3c;
+        }
+        
+        .battle-log {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .next-turn-btn {
+            display: none;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #f39c12, #e67e22);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+        
+        .game-over {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .win {
+            background: linear-gradient(to right, #2ecc71, #1abc9c);
+            color: white;
+        }
+        
+        .lose {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* 重新开始按钮*/
+        .restart-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #f39c12, #8e44ad);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+        
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
+            background: linear-gradient(45deg, #8e44ad, #9b59b6);
+        }
+        
+        .restart-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(155, 89, 182, 0.3);
+        }
+        
+       /* .restart-btn::before {
+            content: "";
+            margin-right: 8px;
+        }*/
+    </style>
+</head>
+<body>
+
+    <!-- 主菜单界面 -->
+    <div id="mainMenu" class="main-menu">
+        <h1 class="menu-title">⚔️ 高中古诗对战</h1>
+        <div class="menu-buttons">
+            <button class="menu-btn" onclick="startGame()">🎮 开始游戏</button>
+            <button class="menu-btn" onclick="showRules()">📚 游戏规则</button>
+        </div>
+    </div>
+
+    <!-- 规则弹窗 -->
+    <div id="rulesModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">📜 游戏规则</h2>
+            <p>1. 玩家与敌方各有 <strong>10点生命值</strong>。</p>
+            <p>2. <strong>玩家回合</strong>：答对古诗词题目，对敌方造成伤害。</p>
+            <p>3. 答对后，可选择一次<strong>强化</strong>（攻击力+1 或 生命值+2）。</p>
+            <p>4. 答错则直接进入<strong>敌方回合</strong>。</p>
+            <p>5. <strong>敌方回合</strong>：敌方有概率强化或攻击，玩家扣除生命值。</p>
+            <p>6. 先将对方生命值降为0者获胜！</p>
+            <button class="close-btn" onclick="hideRules()">关闭</button>
+        </div>
+    </div>
+
+
+    <!-- 原有的游戏容器 -->
+    <div class="game-container" id="gameContainer">
+        <h1>⚔️ 高中古诗对战</h1>
+        
+        <div class="health-bar">
+            <div class="player-health">玩家: <span id="playerHealth">10</span>/10 HP</div>
+            <div class="enemy-health">敌方: <span id="enemyHealth">10</span>/10 HP</div>
+        </div>
+        
+        <div id="statusMessage" class="status-message player-turn">回合开始！</div>
+        
+        <div id="questionBox" class="question-box">
+            <div id="questionText" class="question-text">正在加载题目...</div>
+            <div id="options" class="options"></div>
+        </div>
+        
+        <div id="enhancementOptions" class="enhancement-options">
+            <h3>选择强化:</h3>
+            <button class="enhancement-btn damage-enhance" onclick="applyEnhancement('damage')">攻击力+1</button>
+            <button class="enhancement-btn health-enhance" onclick="applyEnhancement('health')">生命值+2</button>
+        </div>
+        
+        <button id="nextTurnBtn" class="next-turn-btn" onclick="enemyTurn()">敌方回合</button>
+        
+        <button id="restartBtn" class="restart-btn" onclick="restartFromMenu()">退出</button>
+        
+        <div id="battleLog" class="battle-log">
+            <div class="log-entry">你的回合开始</div>
+        </div>
+        
+        <div id="gameOver" class="game-over hidden"></div>
+    </div>
+
+    <script>
+        const mainMenu = document.getElementById('mainMenu');
+        const gameContainer = document.getElementById('gameContainer');
+        const rulesModal = document.getElementById('rulesModal');
+        const aboutModal = document.getElementById('aboutModal');
+
+        // 开始游戏：隐藏菜单，显示游戏
+        function startGame() {
+            mainMenu.style.display = 'none';
+            gameContainer.style.display = 'block';
+            initGame(); // 调用原有的初始化函数
+        }
+
+        // 从游戏内返回主菜单
+        function restartFromMenu() {
+            // 清空战斗日志，防止叠加
+            const battleLogEl = document.getElementById('battleLog');
+            battleLogEl.innerHTML = '<div class="log-entry">你的回合开始</div>';
+            
+            // 隐藏游戏，显示主菜单
+            gameContainer.style.display = 'none';
+            mainMenu.style.display = 'flex';
+        }
+
+        // 显示规则
+        function showRules() {
+            rulesModal.style.display = 'flex';
+        }
+
+        function hideRules() {
+            rulesModal.style.display = 'none';
+        }
+
+        // 显示关于
+        function showAbout() {
+            aboutModal.style.display = 'flex';
+        }
+
+        function hideAbout() {
+            aboutModal.style.display = 'none';
+        }
+
+    
+        // 游戏状态
+        let gameState = {
+            playerHealth: 10,
+            enemyHealth: 10,
+            playerDamage: 1,
+            enemyDamage: 1,
+            currentPlayer: 'player',
+            currentQuestion: null,
+            answeredCorrectly: false
+        };
+
+        // 高中古诗题库
+        const originalQuestions = [
+            {
+                question: "《离骚》的作者是谁？",
+                options: ["屈原", "李白", "杜甫", "陶渊明"],
+                correct: 0
+            },
+            {
+                question: "“路漫漫其修远兮，吾将上下而求索”出自哪部作品？",
+                options: ["《诗经》", "《离骚》", "《九歌》", "《天问》"],
+                correct: 1
+            },
+            {
+                question: "“采菊东篱下，悠然见南山”是谁的诗句？",
+                options: ["王维", "孟浩然", "陶渊明", "谢灵运"],
+                correct: 2
+            },
+            {
+                question: "《蜀道难》的作者是？",
+                options: ["杜甫", "李白", "王勃", "李商隐"],
+                correct: 1
+            },
+            {
+                question: "“安能摧眉折腰事权贵，使我不得开心颜”出自哪首诗？",
+                options: ["《将进酒》", "《蜀道难》", "《梦游天姥吟留别》", "《侠客行》"],
+                correct: 2
+            },
+            {
+                question: "“感时花溅泪，恨别鸟惊心”是谁的作品？",
+                options: ["李白", "杜甫", "白居易", "李商隐"],
+                correct: 1
+            },
+            {
+                question: "“无边落木萧萧下，不尽长江滚滚来”出自哪首诗？",
+                options: ["《春望》", "《登高》", "《茅屋为秋风所破歌》", "《闻官军收河南河北》"],
+                correct: 1
+            },
+            {
+                question: "“庄生晓梦迷蝴蝶，望帝春心托杜鹃”是谁的诗句？",
+                options: ["杜牧", "李商隐", "温庭筠", "韦庄"],
+                correct: 1
+            },
+            {
+                question: "“大江东去，浪淘尽，千古风流人物”出自哪首词？",
+                options: ["《念奴娇·赤壁怀古》", "《水调歌头》", "《江城子·密州出猎》", "《定风波》"],
+                correct: 0
+            },
+            {
+                question: "“人生如梦，一尊还酹江月”是谁的作品？",
+                options: ["辛弃疾", "苏轼", "柳永", "李清照"],
+                correct: 1
+            },
+            {
+                question: "“莫道不销魂，帘卷西风，人比黄花瘦”是谁的词句？",
+                options: ["李清照", "柳永", "秦观", "晏殊"],
+                correct: 0
+            },
+            {
+                question: "“寻寻觅觅，冷冷清清，凄凄惨惨戚戚”出自哪首词？",
+                options: ["《声声慢》", "《醉花阴》", "《如梦令》", "《武陵春》"],
+                correct: 0
+            },
+            {
+                question: "“想当年，金戈铁马，气吞万里如虎”是谁的词句？",
+                options: ["苏轼", "辛弃疾", "陆游", "范仲淹"],
+                correct: 1
+            },
+            {
+                question: "“凭谁问，廉颇老矣，尚能饭否？”出自哪首词？",
+                options: ["《永遇乐·京口北固亭怀古》", "《破阵子·为陈同甫赋壮词以寄之》", "《南乡子·登京口北固亭有怀》", "《水龙吟·登建康赏心亭》"],
+                correct: 0
+            },
+            {
+                question: "“执手相看泪眼，竟无语凝噎”是谁的词句？",
+                options: ["苏轼", "柳永", "欧阳修", "晏殊"],
+                correct: 1
+            },
+            {
+                question: "“今宵酒醒何处？杨柳岸，晓风残月”出自哪首词？",
+                options: ["《雨霖铃》", "《蝶恋花》", "《八声甘州》", "《望海潮》"],
+                correct: 0
+            },
+            {
+                question: "“问君能有几多愁？恰似一江春水向东流”是谁的词句？",
+                options: ["李煜", "李清照", "晏殊", "欧阳修"],
+                correct: 0
+            },
+            {
+                question: "“无可奈何花落去，似曾相识燕归来”是谁的词句？",
+                options: ["晏殊", "欧阳修", "范仲淹", "柳永"],
+                correct: 0
+            },
+            {
+                question: "“昨夜西风凋碧树，独上高楼，望尽天涯路”是谁的作品？",
+                options: ["欧阳修", "晏殊", "秦观", "周邦彦"],
+                correct: 1
+            },
+            {
+                question: "“落红不是无情物，化作春泥更护花”是谁的诗句？",
+                options: ["龚自珍", "林则徐", "魏源", "张维屏"],
+                correct: 0
+            },
+            {
+                question: "“山重水复疑无路，柳暗花明又一村”是谁的诗句？",
+                options: ["陆游", "苏轼", "辛弃疾", "杨万里"],
+                correct: 0
+            },
+            {
+                question: "“纸上得来终觉浅，绝知此事要躬行”是谁的名句？",
+                options: ["朱熹", "陆游", "苏轼", "王安石"],
+                correct: 1
+            },
+            {
+                question: "“横看成岭侧成峰，远近高低各不同”出自哪首诗？",
+                options: ["《题西林壁》", "《饮湖上初晴后雨》", "《惠崇春江晚景》", "《赤壁赋》"],
+                correct: 0
+            },
+            {
+                question: "“但愿人长久，千里共婵娟”出自哪首词？",
+                options: ["《水调歌头》", "《念奴娇·赤壁怀古》", "《江城子·密州出猎》", "《卜算子·黄州定慧院寓居作》"],
+                correct: 0
+            },
+            {
+                question: "“十年生死两茫茫，不思量，自难忘”是谁的词句？",
+                options: ["苏轼", "辛弃疾", "柳永", "秦观"],
+                correct: 0
+            },
+            {
+                question: "“关关雎鸠，在河之洲”出自哪部作品？",
+                options: ["《楚辞》", "《诗经》", "《论语》", "《孟子》"],
+                correct: 1
+            },
+            {
+                question: "“蒹葭苍苍，白露为霜”出自哪篇作品？",
+                options: ["《关雎》", "《蒹葭》", "《桃夭》", "《硕鼠》"],
+                correct: 1
+            },
+            {
+                question: "“青青园中葵，朝露待日晞”出自哪首诗？",
+                options: ["《古诗十九首》", "《长歌行》", "《陌上桑》", "《孔雀东南飞》"],
+                correct: 1
+            },
+            {
+                question: "“盈盈一水间，脉脉不得语”描写的是哪个故事？",
+                options: ["嫦娥奔月", "牛郎织女", "梁祝化蝶", "白蛇传"],
+                correct: 1
+            },
+            {
+                question: "“煮豆燃豆萁，豆在釜中泣”是谁的诗句？",
+                options: ["曹植", "曹操", "曹丕", "王粲"],
+                correct: 0
+            },
+            {
+                question: "“老骥伏枥，志在千里”是谁的作品？",
+                options: ["曹丕", "曹植", "曹操", "刘桢"],
+                correct: 2
+            },
+            {
+                question:"“众女嫉余之蛾眉兮的”的下一句是什么？",
+                options:['谣诼谓余以善淫','夫孰异道而相安','余独好修以为常','何不改此度?'],
+                correct: 0
+            },
+            {
+                question:'“悟已往之不谏”的下一句是什么？',
+                options:['觉今是而昨非','恨晨光之熹微','知来者之可追','门虽设而常关'],
+                correct: 2
+            },
+            {
+                 question:'“伏尸百万”的下一句是什么？',
+                 options:['志在千里','一夫当关','宰割天下','流血漂橹'],
+                 correct: 3
+            }
+        ];
+
+        // 创建可随机访问的问题池
+        let availableQuestions = [...originalQuestions];
+
+        // 洗牌算法
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 获取下一个随机问题
+        function getNextQuestion() {
+            // 如果可用问题池为空，重新填充
+            if (availableQuestions.length === 0) {
+                availableQuestions = shuffleArray(originalQuestions);
+            }
+            
+            // 从池中取出一个问题
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            const question = availableQuestions.splice(randomIndex, 1)[0];
+            
+            return question;
+        }
+
+        // DOM元素
+        const playerHealthEl = document.getElementById('playerHealth');
+        const enemyHealthEl = document.getElementById('enemyHealth');
+        const questionTextEl = document.getElementById('questionText');
+        const optionsEl = document.getElementById('options');
+        const enhancementOptionsEl = document.getElementById('enhancementOptions');
+        const nextTurnBtn = document.getElementById('nextTurnBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const statusMessageEl = document.getElementById('statusMessage');
+        const battleLogEl = document.getElementById('battleLog');
+        const gameOverEl = document.getElementById('gameOver');
+
+        // 初始化游戏
+        function initGame() {
+            gameState.playerHealth = 10;
+            gameState.enemyHealth = 10;
+            gameState.playerDamage = 1;
+            gameState.enemyDamage = 1;
+            gameState.currentPlayer = 'player';
+            gameState.answeredCorrectly = false;
+            
+            // 重新初始化问题池
+            availableQuestions = shuffleArray(originalQuestions);
+            
+            updateHealthDisplay();
+            addBattleLog("🎮 游戏开始！您先行动。");
+            showNextQuestion();
+            
+            // 隐藏游戏结束提示
+            gameOverEl.classList.add('hidden');
+        }
+
+        // 更新生命值显示
+        function updateHealthDisplay() {
+            playerHealthEl.textContent = gameState.playerHealth;
+            enemyHealthEl.textContent = gameState.enemyHealth;
+        }
+
+        // 添加战斗日志
+        function addBattleLog(message) {
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = message;
+            battleLogEl.appendChild(logEntry);
+            battleLogEl.scrollTop = battleLogEl.scrollHeight;
+        }
+
+        // 显示下一题
+        function showNextQuestion() {
+            gameState.currentQuestion = getNextQuestion();
+            
+            questionTextEl.textContent = gameState.currentQuestion.question;
+            
+            optionsEl.innerHTML = '';
+            gameState.currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.onclick = () => checkAnswer(index);
+                optionsEl.appendChild(button);
+            });
+            
+            statusMessageEl.textContent = '回合开始！';
+            statusMessageEl.className = 'status-message player-turn';
+            enhancementOptionsEl.style.display = 'none';
+            nextTurnBtn.style.display = 'none';
+        }
+
+        // 检查答案
+        function checkAnswer(selectedIndex) {
+            // 获取当前存在的选项按钮集合（修复forEach错误的关键）
+            const allButtons = document.querySelectorAll('.option-btn');
+            allButtons.forEach(btn => btn.disabled = true);
+
+            // 检查答案
+            const correctAnswer = gameState.currentQuestion.correct;
+            const isCorrect = selectedIndex === correctAnswer;
+            gameState.answeredCorrectly = isCorrect;
+            
+            if (isCorrect) {
+                addBattleLog(`✅ 正确！对敌方造成 ${gameState.playerDamage} 点伤害！`);
+                gameState.enemyHealth -= gameState.playerDamage;
+                
+                if (gameState.enemyHealth <= 0) {
+                    endGame(true);
+                    return;
+                }
+                
+                // 显示强化选项
+                enhancementOptionsEl.style.display = 'block';
+                statusMessageEl.textContent = '选择一项强化效果：';
+                statusMessageEl.className = 'status-message';
+            } else {
+                addBattleLog(`❌ 错误！正确答案是：${gameState.currentQuestion.options[correctAnswer]}`);
+                
+                // 直接进入敌方回合
+                setTimeout(() => {
+                    nextTurnBtn.style.display = 'block';
+                }, 1000);
+            }
+            
+            updateHealthDisplay();
+        }
+
+        // 应用强化
+        function applyEnhancement(type) {
+            if (type === 'damage') {
+                gameState.playerDamage += 1;
+                addBattleLog(`💪 攻击力提升至 ${gameState.playerDamage}！`);
+            } else if (type === 'health') {
+                gameState.playerHealth += 2;
+                addBattleLog(`❤️ 生命值增加至 ${gameState.playerHealth}！`);
+            }
+            
+            enhancementOptionsEl.style.display = 'none';
+            nextTurnBtn.style.display = 'block';
+        }
+
+        // 敌方回合
+        function enemyTurn() {
+            statusMessageEl.textContent = '敌方回合...';
+            statusMessageEl.className = 'status-message enemy-turn';
+            nextTurnBtn.style.display = 'none';
+            
+            // 敌方行动延迟
+            setTimeout(() => {
+                // 敌方有概率触发强化
+                let enemyAction = "攻击";
+                if (Math.random() < 0.3) { // 30%概率触发强化
+                    if (Math.random() < 0.5) {
+                        gameState.enemyDamage += 1;
+                        addBattleLog(`👹 敌方攻击力提升至 ${gameState.enemyDamage}！`);
+                        enemyAction = "强化攻击";
+                    } else {
+                        gameState.enemyHealth += 1;
+                        addBattleLog(`💚 敌方生命值增加至 ${gameState.enemyHealth}！`);
+                        enemyAction = "强化生命";
+                    }
+                }
+                
+                // 敌方攻击
+                gameState.playerHealth -= gameState.enemyDamage;
+                addBattleLog(`💥 敌方攻击！您受到 ${gameState.enemyDamage} 点伤害！`);
+                
+                if (gameState.playerHealth <= 0) {
+                    endGame(false);
+                    return;
+                }
+                
+                updateHealthDisplay();
+                
+                // 回到玩家回合
+                gameState.currentPlayer = 'player';
+                setTimeout(() => {
+                    showNextQuestion();
+                }, 1500);
+            }, 2000);
+        }
+
+        // 结束游戏
+        function endGame(isWin) {
+            enhancementOptionsEl.style.display = 'none';
+            nextTurnBtn.style.display = 'none';
+            
+            if (isWin) {
+                gameOverEl.textContent = '🎉 胜利！您击败了对手！';
+                gameOverEl.className = 'game-over win';
+            } else {
+                gameOverEl.textContent = '💀 失败！敌方获胜！';
+                gameOverEl.className = 'game-over lose';
+            }
+            
+            gameOverEl.classList.remove('hidden');
+            statusMessageEl.textContent = isWin ? '您获胜了！' : '您失败了！';
+            statusMessageEl.className = isWin ? 'status-message' : 'status-message';
+        }
+
+        // 页面加载时，确保主菜单显示，游戏隐藏
+        window.onload = function() {
+            mainMenu.style.display = 'flex';
+            gameContainer.style.display = 'none';
+        };
+    </script>
+</body>
+</html>
