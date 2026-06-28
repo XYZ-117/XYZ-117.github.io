@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔨 打地鼠小游戏</title>
+    <style>
+        /* ========== CSS部分：样式与布局 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .score-item {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .score-item span {
+            display: block;
+            font-size: 2rem;
+            color: #f5576c;
+            margin-top: 5px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8d7a0;
+            border-radius: 20px;
+            border: 5px solid #e0b06e;
+        }
+
+        .hole {
+            background: #6b3e2b;
+            border-radius: 50%;
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: inset 0 8px 15px rgba(0,0,0,0.5);
+            transition: transform 0.1s ease;
+        }
+
+        .hole:active {
+            transform: scale(0.95);
+        }
+
+        .mole {
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle at 30% 30%, #d4a373, #8b5e3c);
+            border-radius: 50% 50% 45% 45%;
+            position: absolute;
+            bottom: -80%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: bottom 0.15s ease-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 地鼠出现时的样式 */
+        .mole.show {
+            bottom: 10%;
+        }
+
+        /* 地鼠的眼睛 */
+        .mole::before,
+        .mole::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            top: 18px;
+        }
+
+        .mole::before {
+            left: 18px;
+        }
+
+        .mole::after {
+            right: 18px;
+        }
+
+        /* 地鼠的眼珠 */
+        .mole .eye {
+            position: absolute;
+            width: 7px;
+            height: 8px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            top: 21px;
+            z-index: 1;
+        }
+
+        .mole .eye.left {
+            left: 22px;
+        }
+
+        .mole .eye.right {
+            right: 22px;
+        }
+
+        /* 地鼠的鼻子 */
+        .mole .nose {
+            position: absolute;
+            width: 15px;
+            height: 10px;
+            background: #e85d75;
+            border-radius: 50%;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        /* 地鼠的胡须 */
+        .mole .whiskers {
+            position: absolute;
+            width: 35px;
+            height: 2px;
+            background: #333;
+            top: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        /* 被击中时的效果 */
+        .hole.hit {
+            animation: hitEffect 0.3s ease;
+        }
+
+        @keyframes hitEffect {
+            0% { box-shadow: inset 0 8px 15px rgba(0,0,0,0.5), 0 0 0 0 rgba(245, 87, 108, 0.8); }
+            50% { box-shadow: inset 0 8px 15px rgba(0,0,0,0.5), 0 0 30px 15px rgba(245, 87, 108, 0.5); }
+            100% { box-shadow: inset 0 8px 15px rgba(0,0,0,0.5), 0 0 0 0 rgba(245, 87, 108, 0); }
+        }
+
+        .message {
+            font-size: 1.1rem;
+            color: #764ba2;
+            min-height: 30px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 400px) {
+            .game-container {
+                padding: 15px;
+            }
+            .game-board {
+                gap: 8px;
+                padding: 10px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ========== HTML部分：页面结构 ========== -->
+    <div class="game-container">
+        <h1>🔨 打地鼠</h1>
+        <p style="color: #666; margin-bottom: 10px;">点击冒出来的地鼠，看看你能打中多少！</p>
+        
+        <div class="score-board">
+            <div class="score-item">
+                得分
+                <span id="score">0</span>
+            </div>
+            <button class="start-btn" id="startBtn">开始游戏</button>
+            <div class="score-item">
+                剩余时间
+                <span id="timer">30</span>秒
+            </div>
+        </div>
+
+        <!-- 游戏区域：3x3 的九宫格洞 -->
+        <div class="game-board" id="gameBoard">
+            <div class="hole" data-index="0">
+                <div class="mole" id="mole0">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="1">
+                <div class="mole" id="mole1">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="2">
+                <div class="mole" id="mole2">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="3">
+                <div class="mole" id="mole3">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="4">
+                <div class="mole" id="mole4">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="5">
+                <div class="mole" id="mole5">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="6">
+                <div class="mole" id="mole6">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="7">
+                <div class="mole" id="mole7">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+            <div class="hole" data-index="8">
+                <div class="mole" id="mole8">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="nose"></div>
+                    <div class="whiskers"></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="message" id="message">按“开始游戏”按钮启动！</p>
+    </div>
+
+    <script>
+        // ========== JavaScript部分：游戏逻辑 ==========
+        
+        // 获取DOM元素
+        const gameBoard = document.getElementById('gameBoard');
+        const holes = document.querySelectorAll('.hole');
+        const moles = document.querySelectorAll('.mole');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const startBtn = document.getElementById('startBtn');
+        const messageEl = document.getElementById('message');
+
+        // 游戏状态变量
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let countdownTimer = null;
+        let moleTimer = null;
+        let currentMoleIndex = -1;
+
+        // 音效模拟（通过简单的视觉效果代替音效）
+        function playHitAnimation(holeElement) {
+            holeElement.classList.add('hit');
+            setTimeout(() => {
+                holeElement.classList.remove('hit');
+            }, 300);
+        }
+
+        // 随机让一只地鼠冒出来
+        function showRandomMole() {
+            if (!gameActive) return;
+
+            // 先隐藏所有地鼠
+            moles.forEach(mole => mole.classList.remove('show'));
+
+            // 随机选一个洞（不与上一次相同，增加趣味性）
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * 9);
+            } while (randomIndex === currentMoleIndex && gameActive);
+            
+            currentMoleIndex = randomIndex;
+            moles[randomIndex].classList.add('show');
+
+            // 地鼠自动消失的时间（0.6秒到1.2秒之间随机）
+            const disappearTime = Math.random() * 600 + 600;
+            
+            // 清除之前的定时器，设置新的
+            clearTimeout(moleTimer);
+            moleTimer = setTimeout(() => {
+                if (gameActive) {
+                    moles[randomIndex].classList.remove('show');
+                    // 短暂延迟后再显示下一只
+                    setTimeout(() => {
+                        if (gameActive) showRandomMole();
+                    }, Math.random() * 500 + 200);
+                }
+            }, disappearTime);
+        }
+
+        // 打地鼠的处理函数
+        function whackMole(event) {
+            if (!gameActive) {
+                messageEl.textContent = '⏸️ 游戏未开始，请先点击“开始游戏”！';
+                return;
+            }
+
+            const hole = event.currentTarget;
+            const index = parseInt(hole.getAttribute('data-index'));
+            const mole = moles[index];
+
+            // 判断是否打中了（地鼠是否处于显示状态）
+            if (mole.classList.contains('show')) {
+                // 打中了！
+                score++;
+                scoreDisplay.textContent = score;
+                messageEl.textContent = '👏 打中了！太棒了！';
+                
+                // 播放击中动画
+                playHitAnimation(hole);
+                
+                // 隐藏地鼠
+                mole.classList.remove('show');
+                
+                // 短暂延迟后显示新地鼠
+                clearTimeout(moleTimer);
+                setTimeout(() => {
+                    if (gameActive) showRandomMole();
+                }, 300);
+            } else {
+                // 没打中
+                messageEl.textContent = '😅 哎呀，这里没有地鼠！';
+            }
+        }
+
+        // 倒计时逻辑
+        function startCountdown() {
+            timeLeft = 30;
+            timerDisplay.textContent = timeLeft;
+            messageEl.textContent = '🎯 游戏进行中...快打地鼠！';
+            
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                
+                // 时间快结束时给出提示
+                if (timeLeft <= 10 && timeLeft > 0) {
+                    messageEl.textContent = `⏰ 只剩 ${timeLeft} 秒了！加油！`;
+                }
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameActive = false;
+            clearInterval(countdownTimer);
+            clearTimeout(moleTimer);
+            
+            // 隐藏所有地鼠
+            moles.forEach(mole => mole.classList.remove('show'));
+            
+            // 显示最终成绩
+            let endMessage = '';
+            if (score >= 20) {
+                endMessage = '🏆 地鼠终结者！你是打地鼠大师！';
+            } else if (score >= 10) {
+                endMessage = '👍 表现不错！继续练习会更棒！';
+            } else if (score >= 5) {
+                endMessage = '😊 还可以，再试一次吧！';
+            } else {
+                endMessage = '🌱 万事开头难，再来一局！';
+            }
+            
+            messageEl.textContent = `游戏结束！最终得分：${score} 分 —— ${endMessage}`;
+            startBtn.textContent = '再来一局';
+            startBtn.disabled = false;
+            timerDisplay.textContent = '0';
+        }
+
+        // 开始游戏
+        function startGame() {
+            // 重置状态
+            score = 0;
+            scoreDisplay.textContent = '0';
+            gameActive = true;
+            currentMoleIndex = -1;
+            
+            // 清除可能存在的旧定时器
+            clearInterval(countdownTimer);
+            clearTimeout(moleTimer);
+            
+            // 隐藏所有地鼠
+            moles.forEach(mole => mole.classList.remove('show'));
+            
+            startBtn.textContent = '游戏进行中...';
+            startBtn.disabled = true;
+            
+            // 启动倒计时
+            startCountdown();
+            
+            // 短暂延迟后显示第一只地鼠
+            setTimeout(() => {
+                if (gameActive) showRandomMole();
+            }, 500);
+        }
+
+        // 为每个洞绑定点击事件
+        holes.forEach(hole => {
+            hole.addEventListener('click', whackMole);
+        });
+
+        // 开始按钮事件
+        startBtn.addEventListener('click', startGame);
+
+        // 页面加载完成后的初始化提示
+        console.log('🔨 打地鼠游戏准备就绪！点击"开始游戏"来挑战吧！');
+        messageEl.textContent = '按“开始游戏”按钮启动！';
+    </script>
+</body>
+</html>
